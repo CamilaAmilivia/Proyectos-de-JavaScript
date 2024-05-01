@@ -1,0 +1,179 @@
+<title>Arkanoid en JavaScript</title>
+<style>
+    body{
+        background-color: black;
+    }
+    canvas{
+        border: 4px solid #fff;
+        border-bottom: transparent;
+        background: #000;
+        margin: 0 auto;
+        display: block;
+    }
+</style>
+
+
+<!-- <canvas>   proporciona un lienzo rectangular en el cual puedes dibujar gráficos, animaciones, gráficos interactivos y más utilizando JavaScript. Es una característica poderosa que permite crear contenido gráfico dinámico en páginas web.-->
+<canvas></canvas>
+
+<script>
+    const canvas = document.querySelector('canvas') //recuperas la etiqueta o contenido
+    //Ahora debemos poner el contexto
+    const ctx = canvas.getContext('2d') //aca podes usar 3D o otros valores ES EL CONTEXTO
+
+    canvas.width = 448
+    canvas.height = 400
+
+//VARIABLES  DEL JUEGO
+
+    //VARIABLES DE LA PELOTA
+    const ballRadius = 4
+    //posicion de la pelota
+    let x = canvas.width / 2
+    let y = canvas.height - 30
+    //velocidad de la pelota para los 2 ejes
+    let dx = 4 //como cambiamos la x hace que vaya en diagonal tambien
+    let dy = -4 //si es negativo va para arriba si es positivo va para abajo (es por el contexto de canvas)
+
+    //VARIABLES DE LA PALETA
+    const paddleHeight = 10
+    const paddleWidth = 50
+    //posicion de la paleta EN ESTADO INICIAL
+    let paddleX = (canvas.width - paddleWidth)/2
+    let paddleY = (canvas.height - paddleHeight - 10)
+    //variables para las teclas presionadas:
+    let rightPrressed = false
+    let leftPressed = false
+    let sensitivity = 7
+
+    //VARIABLES DE LOS PUNTOS
+    let pointers = 0
+    
+
+
+//FUNCIONES DE DIBUJAR
+
+function drawBall(){
+    //indicarle que empiece a dibujar  (RECORDAR QUE CTX es mi contexto)
+    ctx.beginPath() //iniciar trazado
+    ctx.arc(x,y,ballRadius,0, Math.PI * 2)
+    ctx.fillStyle = '#fff'
+    ctx.fill()
+    ctx.closePath() //optimiza rendimiento y evita que se condundan trazados(termina el trazado)
+}
+
+function drawpaddle(){
+    ctx.fillStyle = '#fff'
+    ctx.fillRect (
+        paddleX, //coordenada X
+        paddleY,//coordenada Y
+        paddleWidth, //ancho del dibujo
+        paddleHeight //alto del dibujo
+    )
+}
+
+
+function drawBricks() {}
+
+function drawScore(){}
+
+function drawLife(){}
+
+//FUNCIONES  de colisiones y que se mueven:   
+    function collisionDetection(){}
+
+    function ballMovement(){
+        //rebotar la pelota
+        if ( x + dx > canvas.width - ballRadius || x + dx < ballRadius ){//pared derecha e izquierza
+            dx = -dx //hace que vaya para el lado contrario a donde iba el negarivo
+        }
+        //rebotar en la parte de arriba
+        if ( y + dy < ballRadius){
+            dy = -dy //hace que vaya para el lado contrario a donde iba 
+        }
+        const isBallXpaddle = x > paddleX && x < paddleX + paddleWidth //ver si la pelota esta en el ancho pala
+        const isBallYpaddle = y + dy > paddleY  //si esta tocando la pala osea en el mismo eje Y
+        if(isBallXpaddle && isBallYpaddle){
+           dy = -dy //cambiamos la dirreccion de la pelota 
+        }
+        //podemos hacer el "GAME OVER" la pelota toca el sueo
+        else if( y + dy > canvas.height - ballRadius){
+            console.log("Game Over")
+            document.location.reload() //que se vuelva a iniciar
+        }
+        //movemos la pelota
+        x += dx
+        y += dy
+    }
+
+    function paddleMovement(){
+        if(rightPrressed && paddleX < canvas.width - paddleWidth){
+            paddleX += sensitivity
+        }else if (leftPressed && canvas.height - paddleHeight){
+            paddleX -= sensitivity
+        }
+    }
+
+    function checkScore(){}
+
+    function checkLife(){}
+
+    function endGame(){}
+
+//Funcion para LIMPIAR la pantalla cuando refrezca la pantalla xq  si no ej nuestra pelota al moverse queda como una linea
+function cleanCanvas(){
+    ctx.clearRect(0,0,canvas.width,canvas.height)
+}
+
+//INICIALIZAR EVENTOS
+function initEvents(){
+    document.addEventListener('keydown', keyDownMandler) //presiona tecla
+    document.addEventListener('keyup', keyUpMandler) //suelte la tecla
+
+    function keyDownMandler (event){
+        const { key } = event
+        //lo sig. se hace con un if en vez de asignar directamente el valor boolean xq el usuario podria estar presionando las 2 teclas
+        if (key == 'Right' || key == 'ArrowRight'){
+            rightPrressed = true
+        } else if (key == 'left' || key == 'ArrowLeft'){
+            leftPressed = true
+        }
+    }
+
+    function keyUpMandler (event){
+        const { key } = event
+        
+        if (key == 'Right' || key == 'ArrowRight'){
+            rightPrressed = false
+        } else if (key == 'left' || key == 'ArrowLeft'){
+            leftPressed = false
+        }
+    }
+}
+
+
+//Lo siguiente funciona para casi todo juego: es TENER un LLOP INFINITO que observa todo el tiempo cuando un valor o elemento cambia
+    function draw () {
+        cleanCanvas() //funcion para limpiar la pantalla
+        // hay que dibujar los elementos dentro de draw    
+        drawBall()
+        drawpaddle()
+        drawBricks()
+        drawScore()
+        drawLife()
+        
+
+        // colisiones y movimientos o todo lo que puede cambiar
+        collisionDetection()
+        ballMovement()
+        paddleMovement()
+        checkScore()
+        checkLife()
+        endGame()
+
+        window.requestAnimationFrame(draw) 
+        //esto se llama asi mismo(recursivo).requestAnimationFrame es un metodo que lo que hace es que te permite programar una funcion que se ejecute antes de que se refresque la pantalla. Le pasas una funcion y se ejecuta caada vez que se refrezca la pantalla (depende del monitor pero en general se va a ejecutar 60 veces x seg => 60 freg x second). Tecnicamente no es recursivvo ya que cuando termina lanfuncio programa el sig. para que tambien se ejecute. Si quiero guardar info en etapa superior la tengo que definir para poder accederla
+    }
+    initEvents()
+    draw() //inicializa el loop
+</script>
