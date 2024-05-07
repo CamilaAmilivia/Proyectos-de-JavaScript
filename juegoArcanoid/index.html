@@ -18,7 +18,7 @@
 
 <!-- el hidden es un boolean lo que hace es que el navegador NO RENDERICE ese elemento (hay algunos navegadores antiguos que lo ignoran asiq no siempre funciona es como un display none)-->
 <img hidden id="pala" src="./imagenes/todos.png" alt="todos Arcanoid" />
-<img hidden id="ladrillos" src="./imagenes/ladrillos.png" alt="img ladrillos Arcanoid" />
+<img hidden id="ladrillosIMG" src="./imagenes/ladrillos.png" alt="img ladrillos Arcanoid" />
 
 
 
@@ -29,7 +29,7 @@
     //Ahora debemos poner el contexto
     const ctx = canvas.getContext('2d') //aca podes usar 3D o otros valores ES EL CONTEXTO
 
-    const $ladrillosIMG = document.querySelector('#ladrillos')
+    const $ladrillosIMG = document.querySelector('#ladrillosIMG')
 
     const $pala = document.querySelector('#pala')
 
@@ -60,12 +60,12 @@
 
     //VARIABLES DE LADRILLOS
     const filas = 6
-    const columnas = 12
-    const anchoLadrillo = 30
-    const alturaLadrillo = 10
-    const paddingLadrillo = 2 
+    const columnas = 13
+    const anchoLadrillo = 32
+    const alturaLadrillo = 16
+    const paddingLadrillo = 0
     const posAlto = 80 //estan arriba
-    const posAncho = 32 //van a izquierda 
+    const posAncho = 16 //van a izquierda 
     const ladrillos = []
     const LADRILLO_STATUS = {
         active: 1,
@@ -79,7 +79,7 @@
             const ladrilloX = c * (anchoLadrillo + paddingLadrillo) + posAncho  //en cada columna (c) le multiplicamos cuanto es lo q ocupa cada ladrillo + el espacio que tiene q dejar entre el prox ladrillo + el margen que dejamos al inicio
             const ladrilloY = f * (alturaLadrillo + paddingLadrillo) + posAlto
 
-            const random = Math.floor(Math.random * 8) //me permite sacar del 0 al 7 xq redondea para abajo, si quiero q sea desde el uno solo agrego + 1 al final :)
+            const random = Math.floor(Math.random() * 8) //me permite sacar del 0 al 7 xq redondea para abajo, si quiero q sea desde el uno solo agrego + 1 al final :)
 
             //guardamos la info de cada ladrillo
             ladrillos[c][f] = {
@@ -139,9 +139,8 @@ function drawBricks() {
     for (let c = 0; c  < columnas; c++ ){
         for (let f = 0; f < filas; f++){
             const ladrilloActual = ladrillos[c][f]
-            if(ladrilloActual == LADRILLO_STATUS.destroyed){
-                continue //osea si esta destruido no lo queremos dibujar xq eso continue, va a la siguiente iteracion
-            }
+            if (ladrilloActual.status === LADRILLO_STATUS.destroyed) continue;
+            //osea si esta destruido no lo queremos dibujar xq eso continue, va a la siguiente iteracion
             /*ctx.fillStyle = 'yellow'
             ctx.rect(
                 ladrilloActual.x,
@@ -150,16 +149,16 @@ function drawBricks() {
                 alturaLadrillo
             )
             ctx.stroke() //para poner borde en ladrillo 
-            ctx.fill()
-           */
-            const clipX = ladrilloActual.color * 32  no funca//el 32 es porque empieza el sig ladrillo cada 32 px
-
-            ctx.drawImage(
+            ctx.fill()*/
+           
+          
+           const clipX = ladrilloActual.color * 32 //el 32 es porque empieza el sig ladrillo cada 32 px
+           ctx.drawImage(
                 $ladrillosIMG, //imagen
                 clipX,
                 0,
-                25,
-                14,
+                anchoLadrillo,
+                alturaLadrillo,
                 ladrilloActual.x,
                 ladrilloActual.y,
                 anchoLadrillo,
@@ -174,7 +173,23 @@ function drawScore(){}
 function drawLife(){}
 
 //FUNCIONES  de colisiones y que se mueven:   
-    function collisionDetection(){}
+    function collisionDetection(){
+        for (let c = 0; c  < columnas; c++ ){
+            for (let f = 0; f < filas; f++){
+                const ladrilloActual = ladrillos[c][f]
+                if(ladrilloActual == LADRILLO_STATUS.destroyed)
+                continue;
+                
+                const isBallXLadrillo = x > ladrilloActual.x && x < ladrilloActual.x + anchoLadrillo //ver si la pelota esta en el eje x
+                const isBallYLadrillo = y > ladrilloActual.y && y < ladrilloActual.y + alturaLadrillo //si esta tocando la pala osea en el mismo eje Y
+                console.log("X : " + isBallXLadrillo + " Y :" + isBallYLadrillo)
+                if(isBallXLadrillo && isBallYLadrillo){
+                    dy = -dy
+                    ladrilloActual.status = LADRILLO_STATUS.destroyed
+                }
+            }
+        }
+    }
 
     function ballMovement(){
         //rebotar la pelota
