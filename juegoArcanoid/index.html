@@ -6,7 +6,7 @@
     canvas{
         border: 4px solid #fff;
         border-bottom: transparent;
-        background: #000;
+        background: url('/imagenes/fondo.png') repeat;
         margin: 0 auto;
         display: block;
     }
@@ -16,10 +16,22 @@
 <!-- <canvas>   proporciona un lienzo rectangular en el cual puedes dibujar gráficos, animaciones, gráficos interactivos y más utilizando JavaScript. Es una característica poderosa que permite crear contenido gráfico dinámico en páginas web.-->
 <canvas></canvas>
 
+<!-- el hidden es un boolean lo que hace es que el navegador NO RENDERICE ese elemento (hay algunos navegadores antiguos que lo ignoran asiq no siempre funciona es como un display none)-->
+<img hidden id="pala" src="./imagenes/todos.png" alt="todos Arcanoid" />
+<img hidden id="ladrillos" src="./imagenes/ladrillos.png" alt="img ladrillos Arcanoid" />
+
+
+
 <script>
+    //si quiero mas imagenes para los juegos buscar juego Sprits 
+
     const canvas = document.querySelector('canvas') //recuperas la etiqueta o contenido
     //Ahora debemos poner el contexto
     const ctx = canvas.getContext('2d') //aca podes usar 3D o otros valores ES EL CONTEXTO
+
+    const $ladrillosIMG = document.querySelector('#ladrillos')
+
+    const $pala = document.querySelector('#pala')
 
     canvas.width = 448
     canvas.height = 400
@@ -32,7 +44,7 @@
     let x = canvas.width / 2
     let y = canvas.height - 30
     //velocidad de la pelota para los 2 ejes
-    let dx = 4 //como cambiamos la x hace que vaya en diagonal tambien
+    let dx = 1 //como cambiamos la x hace que vaya en diagonal tambien
     let dy = -4 //si es negativo va para arriba si es positivo va para abajo (es por el contexto de canvas)
 
     //VARIABLES DE LA PALETA
@@ -45,6 +57,41 @@
     let rightPrressed = false
     let leftPressed = false
     let sensitivity = 7
+
+    //VARIABLES DE LADRILLOS
+    const filas = 6
+    const columnas = 12
+    const anchoLadrillo = 30
+    const alturaLadrillo = 10
+    const paddingLadrillo = 2 
+    const posAlto = 80 //estan arriba
+    const posAncho = 32 //van a izquierda 
+    const ladrillos = []
+    const LADRILLO_STATUS = {
+        active: 1,
+        destroyed: 0
+    }
+
+    for (let c = 0; c  < columnas; c++ ){
+        ladrillos [c] = [] //inicializamos con un array vacio
+        for (let f = 0; f < filas; f++){
+            //colocamos la pos del ladrillo
+            const ladrilloX = c * (anchoLadrillo + paddingLadrillo) + posAncho  //en cada columna (c) le multiplicamos cuanto es lo q ocupa cada ladrillo + el espacio que tiene q dejar entre el prox ladrillo + el margen que dejamos al inicio
+            const ladrilloY = f * (alturaLadrillo + paddingLadrillo) + posAlto
+
+            const random = Math.floor(Math.random * 8) //me permite sacar del 0 al 7 xq redondea para abajo, si quiero q sea desde el uno solo agrego + 1 al final :)
+
+            //guardamos la info de cada ladrillo
+            ladrillos[c][f] = {
+                x: ladrilloX,
+                y: ladrilloY, 
+                status : LADRILLO_STATUS.active, 
+                color: random
+            }
+
+
+        }
+    }
 
     //VARIABLES DE LOS PUNTOS
     let pointers = 0
@@ -63,17 +110,64 @@ function drawBall(){
 }
 
 function drawpaddle(){
-    ctx.fillStyle = '#fff'
+   /* ctx.fillStyle = '#fff'
     ctx.fillRect (
         paddleX, //coordenada X
         paddleY,//coordenada Y
         paddleWidth, //ancho del dibujo
         paddleHeight //alto del dibujo
+    )*/
+
+    ctx.drawImage(
+        //imagen, clipX, clipY
+        $pala, //es a imagen
+        29, //DONDE EMPIEZA A RECORTAR coorX
+        174, //donde empieza a recortar coorY
+        paddleWidth, //tamaño de recorte
+        paddleHeight, //tamaño de recorte 
+        paddleX, //posicionX del dibujo
+        paddleY, //posicionY del dibujo 
+        paddleWidth, //ancho del dibujo
+        paddleHeight //alto del dibujo
+        //los paddle son identicos xq justo estan iguales pero los ultimo (ancho y alto del dibujo) se pueden cambiar y van a estirar la pala
     )
+
 }
 
 
-function drawBricks() {}
+function drawBricks() {
+    for (let c = 0; c  < columnas; c++ ){
+        for (let f = 0; f < filas; f++){
+            const ladrilloActual = ladrillos[c][f]
+            if(ladrilloActual == LADRILLO_STATUS.destroyed){
+                continue //osea si esta destruido no lo queremos dibujar xq eso continue, va a la siguiente iteracion
+            }
+            /*ctx.fillStyle = 'yellow'
+            ctx.rect(
+                ladrilloActual.x,
+                ladrilloActual.y,
+                anchoLadrillo,
+                alturaLadrillo
+            )
+            ctx.stroke() //para poner borde en ladrillo 
+            ctx.fill()
+           */
+            const clipX = ladrilloActual.color * 32  no funca//el 32 es porque empieza el sig ladrillo cada 32 px
+
+            ctx.drawImage(
+                $ladrillosIMG, //imagen
+                clipX,
+                0,
+                25,
+                14,
+                ladrilloActual.x,
+                ladrilloActual.y,
+                anchoLadrillo,
+                alturaLadrillo
+            )
+        }
+    }
+}
 
 function drawScore(){}
 
@@ -98,7 +192,6 @@ function drawLife(){}
         }
         //podemos hacer el "GAME OVER" la pelota toca el sueo
         else if( y + dy > canvas.height - ballRadius){
-            console.log("Game Over")
             document.location.reload() //que se vuelva a iniciar
         }
         //movemos la pelota
